@@ -1,35 +1,43 @@
 # -*- coding: UTF-8 -*-
 
+import re
 import requests
-from bs4 import BeautifulSoup
-from urlparse import urljoin
+import os
+import os.path
 
 BASE_URL = 'http://www.hatvp.fr'
 
-def soup_url(url):
-    def _deco(fun):
-        def _fun(*args, **kwargs):
-            soup = BeautifulSoup(requests.get(BASE_URL + url).content)
-            return fun(soup, *args, **kwargs)
-        _fun.__name__ = fun.__name__
-        return _fun
-    return _deco
+
+def mk_pdf_url(filename):
+    return '%s/files/declarations/%s' % (BASE_URL, filename)
 
 
-@soup_url('/consulter-les-declarations-rechercher.html')
-def get_pages(soup):
+def get_pdf_urls(full=True):
     """
-    Yield all pages (not PDFs) from the website
+    Yield all PDF URLs from the website. If 'full' is falsy, only the PDF's
+    filename is yielded.
     """
-    for link in soup.find_all('a'):
-        href = link.get('href')
-        if not href or not href.startswith('pages_nominatives/'):
-            continue
-        yield urljoin(BASE_URL, href)
+    url = '%s/js/data.js' % BASE_URL
+    js = requests.get(url).content
 
+    for link in re.findall(r'd\.pdf = "([^.]+\.pdf)"', js):
+        yield mk_pdf_url(link) if full else link
+
+
+def download_pdf(filename, target_dir='pdfs'):
+    """
+    download a PDF in a given directory. 'pdf' should be the PDF's filename,
+    NOT the full URL.
+    """
+    pdf = requests.get(mk_pdf_url(filename))
+    if not os.path.isdir(target_dir):
+        os.mkdir(target_dir)
+    with open('%s/%s' % (target_dir, filename), 'wb') as f:
+        f.write(pdf.content)
 
 
 if __name__ == '__main__':
-    pages = get_pages()
-    for p in pages:
+    pdfs = get_pdf_urls(False)
+    for p in pdfs:
         print p
+        download_pdf(p)

@@ -19,3 +19,9 @@ This script retrieves all the website’s PDFs in one directory, `pdfs`. Just ru
 it and it’ll download each one of them.
 
     venv/bin/python script/get-pdfs.py
+
+Warning: it takes 1.2GB. Alternatively, you can download all of them as [an
+archive][tgz] or through [BitTorrent][torrent].
+
+[tgz]: http://bfontaine.net/hatvp.tgz
+[torrent]: http://bfontaine.net/hatvp.torrent
